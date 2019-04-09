@@ -4,7 +4,8 @@
   "description": "don't look inside~",
   "main": "app.js",
   "scripts": {
-    "test": "echo \"Error: no test specified\" && exit 1"
+    "test": "node app.js",
+    "start": "node app.js"
   },
   "author": "TJ Kandala",
   "license": "ISC",
