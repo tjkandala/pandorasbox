@@ -13,9 +13,9 @@ const Readline = require("@serialport/parser-readline");
 const ardPort = new SerialPort("/dev/cu.usbmodem1411", { baudRate: 9600 });
 const parser = ardPort.pipe(new Readline({ delimiter: "\n" }));
 
-// the default recipient is me. can be changed by the client
+// the default recipient is me, default hidden item is chocolate. can be changed by the client.
 var recipientNumber = process.env.MY_NUMBER;
-var hiddenItem = "chocolate";
+var hiddenItem = "default item";
 
 // Read the port data
 ardPort.on("open", () => {
@@ -28,7 +28,7 @@ parser.on("data", data => {
   if (message === "opened") {
     client.messages
       .create({
-        body: `Somebody opened Pandora's Box! The ${hiddenItem} is vulnerable!`,
+        body: `Somebody opened Pandora's Box! The ${hiddenItem} is/are vulnerable!`,
         from: process.env.TWILIO_PHONE,
         to: recipientNumber
       })
@@ -42,7 +42,10 @@ parser.on("data", data => {
 // set up express web server
 const express = require("express");
 var app = express();
-const webPort = 3000;
+// to enable cross-origin resource sharing
+var cors = require("cors");
+app.use(cors());
+const webPort = process.env.PORT || 4000;
 
 // Parse URL-encoded bodies (as sent by HTML forms)
 app.use(express.urlencoded());
@@ -50,7 +53,7 @@ app.use(express.urlencoded());
 // Parse JSON bodies (as sent by API clients)
 app.use(express.json());
 
-app.get("/", (req, res) => {
+app.get("/data", (req, res) => {
   // TODO: send initial values for number and message to client
   res.json({ recipientNumber: recipientNumber, hiddenItem: hiddenItem });
   console.log("data requested by client!");
@@ -61,6 +64,7 @@ app.post("/config", (req, res) => {
   recipientNumber = req.body.recipientNumber;
   hiddenItem = req.body.hiddenItem;
   console.log("configured by client!");
+  res.send({ recipientNumber: recipientNumber, hiddenItem: hiddenItem });
 });
 
 app.listen(webPort, () => console.log(`app listening on port ${webPort}!`));
